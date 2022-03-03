@@ -63,7 +63,8 @@ app.post("/api/country", (req, res) => {
   const newCountry = {
     id: maxId + 1,
     content: countrys.content,
-    date: new Date().toISOString(),
+    date: new Date(),
+    nationality: countrys.nationality
   };
 
   country = country.concat(newCountry);
