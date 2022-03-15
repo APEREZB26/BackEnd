@@ -1,84 +1,100 @@
+require("dotenv").config();
+require("./dbMongoConnect");
+
 const express = require("express");
 const app = express();
-const cors = require('cors')
+const path = require('path')
+const cors = require("cors");
 const PORT = process.env.PORT || 4000;
+
+const Country = require("./Models/Country.js");
 
 app.use(cors());
 app.use(express.json());
-app.use((request,response,next)=>{
-  console.log(request.method)
-  console.log(request.path)
-  console.log(request.body)
-  console.log('--------')
+app.use((request, response, next) => {
+  console.log(request.method);
+  console.log(request.path);
+  console.log(request.body);
+  console.log("--------");
   next();
-})
+});
 
-let country = [
-  {
-    id: 1,
-    content: "Contenido 1",
-    date: new Date(),
-  },
-  {
-    id: 2,
-    content: "Contenido 2",
-    date: new Date(),
-  },
-  {
-    id: 3,
-    content: "Contenido 3",
-    date: new Date(),
-  },
-];
+let country = [];
 
 app.get("/", (req, res) => {
-  res.send("<h1>Hola Mundo</h1>");
+  res.sendFile(path.resolve(__dirname, 'portada.html'));
 });
 
 app.get("/api/country", (req, res) => {
-  res.json(country);
+  Country.find({}).then((countries) => {
+    res.json(countries);
+  });
 });
 
-app.get("/api/country/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const countrys = country.find((country) => country.id === id);
-
-  if (countrys) {
-    res.json(countrys);
-  } else {
-    res.status(404).end();
+app.put("/api/country/:id", (req, res ,next) => {
+  const countrys = req.body;
+  const {id} = req.params;
+  
+  const newCountryInfo =  {
+    content: countrys.content,
+    nationality: countrys.nationality,
   }
+  Country.findByIdAndUpdate(id, newCountryInfo, {new : true})
+  .then(result=>{
+    res.json(result)
+  })
 });
 
-app.delete("/api/country/:id", (req, res) => {
-  const id = Number(req.params.id);
-  country = country.filter((country) => country.id !== id);
-  res.status(204).end();
+app.get("/api/country/:id", (req, res, next) => {
+  const { id } = req.params
+  Country.findById(id).then((country) => {
+    if (country) {
+      return res.json(country);
+    } else {
+      res.status(404).end();
+    }
+  }).catch(err=>{
+    next(err)
+  })
+});
+
+app.delete("/api/country/:id", (req, res, next) => {
+  const {id} = req.params;
+
+  Country.findByIdAndRemove(id).then(result =>{
+    res.status(204).end();
+  }).catch(err=>{
+    next(err);
+  })
 });
 
 app.post("/api/country", (req, res) => {
   const countrys = req.body;
-  const ids = country.map((country) => country.id);
-  const maxId = Math.max(...ids);
-  const newCountry = {
-    id: maxId + 1,
+  const newCountry = new Country({
     content: countrys.content,
     date: new Date(),
-    nationality: countrys.nationality
-  };
+    nationality: countrys.nationality,
+  });
 
-  country = country.concat(newCountry);
-
-  res.json(newCountry);
+  newCountry.save().then((savedCountry) => {
+    res.json(savedCountry)
+  });
 });
 
 //CONTROLADOR DE ERROR 404
 
-app.use((request,response)=>{
-  response.status(404).json({
-    error: 'Página no encontrada'
-  })
-})
+app.use((error, request, response, next) => {
+  response.status(404).end()
+});
+
+app.use((error, request, response, next) => {
+  console.log(error.name)
+  if(error.name === 'CastError'){
+    response.status(400).end()
+  }else{
+    response.status(500).end()
+  }
+});
 
 app.listen(PORT);
 console.log(`Servidor en el Puerto ${PORT}`);

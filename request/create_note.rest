@@ -2,6 +2,5 @@ POST http://localhost:4000/api/country
 Content-Type: application/json
 
 {
-    "content":"Esto es una nueva nota",
-    "nationality": "countrys.nationality"
+    "content":"Esto es una nueva nota"
 }

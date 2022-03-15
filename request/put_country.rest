@@ -1,0 +1,7 @@
+PUT  http://localhost:4000/api/country/
+Content-Type: application/json
+
+{
+    "content":"Update de Pais ahora bien hecho",
+    "nationality":"Argentina"
+}
