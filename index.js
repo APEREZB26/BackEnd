@@ -68,7 +68,7 @@ app.delete("/api/country/:id", (req, res, next) => {
   })
 });
 
-app.post("/api/country", (req, res) => {
+app.post("/api/country", (req, res, next) => {
   const countrys = req.body;
   const newCountry = new Country({
     content: countrys.content,
@@ -79,6 +79,8 @@ app.post("/api/country", (req, res) => {
   newCountry.save().then((savedCountry) => {
     res.json(savedCountry)
   });
+
+  next();
 });
 
 //CONTROLADOR DE ERROR 404
